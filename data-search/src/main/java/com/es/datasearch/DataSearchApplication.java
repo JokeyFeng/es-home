@@ -5,7 +5,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.ImportResource;
 
-@ComponentScan(basePackages = {"com.es.datasearch"})
+/**
+ * @author yiheni
+ */
 @SpringBootApplication
 @ImportResource("classpath:META-INF/spring/*.xml")
 public class DataSearchApplication {

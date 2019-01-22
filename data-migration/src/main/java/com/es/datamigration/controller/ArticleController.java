@@ -13,12 +13,13 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * 文章搜索相关
  *
+ * @author yiheni
  */
 @RestController
 @RequestMapping("/api/article")
 public class ArticleController {
 
-	private static final Logger logger = LoggerFactory.getLogger(ArticleController.class);
+    private static final Logger logger = LoggerFactory.getLogger(ArticleController.class);
 
     @Autowired
     private ArticleSyncToEsManager articleSyncToEsManager;
@@ -28,23 +29,25 @@ public class ArticleController {
 
     /**
      * 开启同步数据，将article表中数据同步到ES
+     *
      * @return
      */
-    @GetMapping("/articletoes")
+    @GetMapping("/article/toes")
     public String syncPlaceToEs() {
-    	String result = articleSyncToEsManager.syncDataControl();
-        return result;
+        return articleSyncToEsManager.syncDataControl();
     }
-    
+
     /**
      * 检查ES索引状态
+     *
      * @return
      */
-    @RequestMapping("/checkindex")
+    @RequestMapping("/check/index")
     public boolean createIndex() {
-    	logger.info("-------------------------------------检查ES索引状态---------------------------------------------");
-		boolean flag = elasticSearchIndexManager.checkIndex("db_search.tb_article");//特殊索引配置入口,可直接追加
-		logger.info("-------------------------------------ES索引状态检查完成---------------------------------------------");
+        logger.info("-------------------------------------检查ES索引状态---------------------------------------------");
+        //特殊索引配置入口,可直接追加
+        boolean flag = elasticSearchIndexManager.checkIndex("db_search.tb_article");
+        logger.info("-------------------------------------ES索引状态检查完成---------------------------------------------");
         return flag;
     }
 

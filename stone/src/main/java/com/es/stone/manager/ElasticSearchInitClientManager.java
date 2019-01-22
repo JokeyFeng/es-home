@@ -14,12 +14,15 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+/**
+ * @author yiheni
+ */
 @Component
 @Configuration
 public class ElasticSearchInitClientManager {
     private final static Logger logger = LoggerFactory.getLogger(ElasticSearchInitClientManager.class);
-    private final static int poolSize = 50;
-    private static volatile int idleconnect;
+    private final static int POOL_SIZE = 50;
+    private static volatile int idleConnect;
     private static BlockingQueue<RestHighLevelClient> pool = null;
 
     @Value("${es.client.servers}")
@@ -79,8 +82,8 @@ public class ElasticSearchInitClientManager {
             return;
         }
         HttpHost[] httpHosts = serverToHttpHost(servers);
-        pool = new LinkedBlockingQueue<>(poolSize);
-        for (int i = 0; i < poolSize; i++) {
+        pool = new LinkedBlockingQueue<>(POOL_SIZE);
+        for (int i = 0; i < POOL_SIZE; i++) {
             try {
                 pool.put(new RestHighLevelClient(RestClient.builder(httpHosts)));
             } catch (InterruptedException e) {
@@ -100,19 +103,19 @@ public class ElasticSearchInitClientManager {
             initClientPool();
         }
         try {
-            return this.pool.take();
+            return ElasticSearchInitClientManager.pool.take();
         } catch (InterruptedException e) {
             logger.error("从线程池中获取客户端异常！", e);
         } finally {
-            this.idleconnect = this.pool.size();
+            ElasticSearchInitClientManager.idleConnect = ElasticSearchInitClientManager.pool.size();
         }
         return null;
     }
 
     public void disConnect(RestHighLevelClient client) {
         try {
-            this.pool.put(client);
-            this.idleconnect = this.pool.size();
+            ElasticSearchInitClientManager.pool.put(client);
+            ElasticSearchInitClientManager.idleConnect = ElasticSearchInitClientManager.pool.size();
         } catch (InterruptedException e) {
             logger.error("同步服务断开连接异常！", e);
         }
@@ -127,7 +130,7 @@ public class ElasticSearchInitClientManager {
     }
 
     public static int getIdleconnect() {
-        return idleconnect;
+        return idleConnect;
     }
 
 }

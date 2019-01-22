@@ -6,6 +6,9 @@ import org.elasticsearch.search.builder.SearchSourceBuilder;
 
 import java.util.List;
 
+/**
+ * @author yiheni
+ */
 public class ArticleCollectHelper {
 	/**
 	 * 组装根据Id查询文章信息的查询逻辑

@@ -8,6 +8,9 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * @author yiheni
+ */
 public class ConvertUserUtil {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ConvertUserUtil.class);

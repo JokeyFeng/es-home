@@ -36,17 +36,12 @@ public class AbstractCanalCoreManager {
     protected static final String SEP = SystemUtils.LINE_SEPARATOR;
     protected static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
     protected volatile boolean running = false;
-    protected Thread.UncaughtExceptionHandler handler = new Thread.UncaughtExceptionHandler() {
-
-        public void uncaughtException(Thread t, Throwable e) {
-            logger.error("parse events has an error", e);
-        }
-    };
+    protected Thread.UncaughtExceptionHandler handler = (t, e) -> logger.error("parse events has an error", e);
     protected Thread thread = null;
     protected CanalConnector canalConnector;
-    protected static String context_format = null;
-    protected static String row_format = null;
-    protected static String transaction_format = null;
+    protected static String context_format;
+    protected static String row_format;
+    protected static String transaction_format;
     protected String destination;
 
     private ElasticSearchDumpManager elasticSearchDumpManager;
@@ -81,12 +76,7 @@ public class AbstractCanalCoreManager {
 
     public void start() {
         Assert.notNull(canalConnector, "connector is null");
-        thread = new Thread(new Runnable() {
-
-            public void run() {
-                process();
-            }
-        });
+        thread = new Thread(() -> process());
 
         thread.setUncaughtExceptionHandler(handler);
         thread.start();
@@ -117,7 +107,8 @@ public class AbstractCanalCoreManager {
                 canalConnector.connect();
                 canalConnector.subscribe();
                 while (running) {
-                    Message message = canalConnector.getWithoutAck(batchSize); // 获取指定数量的数据
+                    // 获取指定数量的数据
+                    Message message = canalConnector.getWithoutAck(batchSize);
                     long batchId = message.getId();
                     int size = message.getEntries().size();
                     if (batchId == -1 || size == 0) {
@@ -130,7 +121,8 @@ public class AbstractCanalCoreManager {
                         syncEntry(message.getEntries());
                     }
 
-                    canalConnector.ack(batchId); // 提交确认
+                    // 提交确认
+                    canalConnector.ack(batchId);
                     // connector.rollback(batchId); // 处理失败, 回滚数据
                 }
             } catch (Exception e) {
@@ -156,8 +148,8 @@ public class AbstractCanalCoreManager {
         }
 
         SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
-        logger.info(context_format, new Object[]{batchId, size, memsize, format.format(new Date()), startPosition,
-                endPosition});
+        logger.info(context_format, batchId, size, memsize, format.format(new Date()), startPosition,
+                endPosition);
     }
 
     protected String buildPositionForDump(Entry entry) {
@@ -209,12 +201,7 @@ public class AbstractCanalCoreManager {
 
         //根据mysql的主键字段名升序排列
         Map<String, String> keyMap = new TreeMap<String, String>(
-                new Comparator<String>() {
-                    public int compare(String obj1, String obj2) {
-                        // 升序排序
-                        return obj1.compareTo(obj2);
-                    }
-                });
+                Comparator.naturalOrder());
 
         for (Column column : columns) {
             if (column.getIsKey()) {
@@ -225,7 +212,8 @@ public class AbstractCanalCoreManager {
                 if (StringUtils.isNotBlank(column.getValue())) {
                     try {
                         synchronized (sdf) {
-                            colMap.put(column.getName(), sdf.parse(column.getValue()));//时间戳单独处理存入ES
+                            //时间戳单独处理存入ES
+                            colMap.put(column.getName(), sdf.parse(column.getValue()));
                         }
                     } catch (Exception e) {
                         logger.error("数据库timestamp / datetime字段映射异常:key: {},value: {} ", column.getName(), column.getValue(), e);
@@ -233,24 +221,28 @@ public class AbstractCanalCoreManager {
                     }
                 }
             } else if ("date".equals(column.getMysqlType())) {
-                if (StringUtils.isNotBlank(column.getValue())) {//一定要在此处加判断，如果为空，则不走下面的else分支，不组装date字段，否则es报错。
+                //一定要在此处加判断，如果为空，则不走下面的else分支，不组装date字段，否则es报错。
+                if (StringUtils.isNotBlank(column.getValue())) {
                     try {
                         synchronized (sdfDate) {
-                            colMap.put(column.getName(), sdfDate.parse(column.getValue()));//时间戳单独处理存入ES
+                            //时间戳单独处理存入ES
+                            colMap.put(column.getName(), sdfDate.parse(column.getValue()));
                         }
                     } catch (Exception e) {
                         logger.error("数据库date字段映射异常: key: {},value: {}", column.getName(), column.getValue(), e);
                         errorLog = true;
                     }
                 }
-            }else if("time".equals(column.getMysqlType())){
-                if(StringUtils.isNotBlank(column.getValue())) {//一定要在此处加判断，如果为空，则不走下面的else分支，不组装time字段，否则es报错。
+            } else if ("time".equals(column.getMysqlType())) {
+                //一定要在此处加判断，如果为空，则不走下面的else分支，不组装time字段，否则es报错。
+                if (StringUtils.isNotBlank(column.getValue())) {
                     try {
-                        synchronized (sdfTime){
-                            colMap.put(column.getName(), sdfTime.parse(column.getValue()));//时间戳单独处理存入ES
+                        synchronized (sdfTime) {
+                            //时间戳单独处理存入ES
+                            colMap.put(column.getName(), sdfTime.parse(column.getValue()));
                         }
                     } catch (Exception e) {
-                        logger.error("数据库time字段映射异常: key: {},value: {}",column.getName(),column.getValue(), e);
+                        logger.error("数据库time字段映射异常: key: {},value: {}", column.getName(), column.getValue(), e);
                         errorLog = true;
                     }
                 }
@@ -289,7 +281,7 @@ public class AbstractCanalCoreManager {
             for (Entry entry : entryList) {
 
                 long executeTime = entry.getHeader().getExecuteTime();
-                long delayTime = new Date().getTime() - executeTime;
+                long delayTime = System.currentTimeMillis() - executeTime;
 
                 //判断mysql事物开始和事物结束
                 if (entry.getEntryType() == EntryType.TRANSACTIONBEGIN || entry.getEntryType() == EntryType.TRANSACTIONEND) {
@@ -302,12 +294,12 @@ public class AbstractCanalCoreManager {
                         }
                         // 打印事务头信息，执行的线程id，事务耗时
                         logger.info(transaction_format,
-                                new Object[]{entry.getHeader().getLogfileName(),
-                                        String.valueOf(entry.getHeader().getLogfileOffset()),
-                                        String.valueOf(entry.getHeader().getExecuteTime()), String.valueOf(delayTime)});
+                                entry.getHeader().getLogfileName(),
+                                String.valueOf(entry.getHeader().getLogfileOffset()),
+                                String.valueOf(entry.getHeader().getExecuteTime()), String.valueOf(delayTime));
                         logger.info(" BEGIN ----> Thread id: {}", begin.getThreadId());
-                    } else if (entry.getEntryType() == EntryType.TRANSACTIONEND) {
-                        TransactionEnd end = null;
+                    } else {
+                        TransactionEnd end;
                         try {
                             end = TransactionEnd.parseFrom(entry.getStoreValue());
                         } catch (InvalidProtocolBufferException e) {
@@ -317,9 +309,9 @@ public class AbstractCanalCoreManager {
                         logger.info("----------------\n");
                         logger.info(" END ----> transaction id: {}", end.getTransactionId());
                         logger.info(transaction_format,
-                                new Object[]{entry.getHeader().getLogfileName(),
-                                        String.valueOf(entry.getHeader().getLogfileOffset()),
-                                        String.valueOf(entry.getHeader().getExecuteTime()), String.valueOf(delayTime)});
+                                entry.getHeader().getLogfileName(),
+                                String.valueOf(entry.getHeader().getLogfileOffset()),
+                                String.valueOf(entry.getHeader().getExecuteTime()), String.valueOf(delayTime));
                     }
 
                 }
@@ -336,10 +328,10 @@ public class AbstractCanalCoreManager {
                     EventType eventType = rowChage.getEventType();
 
                     logger.info(row_format,
-                            new Object[]{entry.getHeader().getLogfileName(),
-                                    String.valueOf(entry.getHeader().getLogfileOffset()), entry.getHeader().getSchemaName(),
-                                    entry.getHeader().getTableName(), eventType,
-                                    String.valueOf(entry.getHeader().getExecuteTime()), String.valueOf(delayTime)});
+                            entry.getHeader().getLogfileName(),
+                            String.valueOf(entry.getHeader().getLogfileOffset()), entry.getHeader().getSchemaName(),
+                            entry.getHeader().getTableName(), eventType,
+                            String.valueOf(entry.getHeader().getExecuteTime()), String.valueOf(delayTime));
 
                     if (eventType == EventType.QUERY || rowChage.getIsDdl()) {
                         logger.info(" sql ----> " + rowChage.getSql() + SEP);
@@ -354,12 +346,15 @@ public class AbstractCanalCoreManager {
                             if (rowDataList.size() < 4) {
                                 rowDataList.add(rowData);
                             } else {
-                                rowDataList.add(rowData);//第10条加入到列表，然后利用线程池，开启线程同步
+                                //第10条加入到列表，然后利用线程池，开启线程同步
+                                rowDataList.add(rowData);
                                 syncRowDataThreadPool.submit(new SyncRowDataThread(i, rowDataList, entry, eventType));
-                                rowDataList = new ArrayList<>();//创建新List对象。用于开启新线程。
+                                //创建新List对象。用于开启新线程。
+                                rowDataList = new ArrayList<>();
                             }
                         }
-                        if (rowDataList.size() < 4) {//如果rowDataList中不足10条，则需要将不足的，提交到线程执行
+                        //如果rowDataList中不足10条，则需要将不足的，提交到线程执行
+                        if (rowDataList.size() < 4) {
                             syncRowDataThreadPool.submit(new SyncRowDataThread(i, rowDataList, entry, eventType));
                         }
                         try {

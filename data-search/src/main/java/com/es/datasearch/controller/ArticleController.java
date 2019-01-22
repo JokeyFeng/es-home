@@ -11,25 +11,23 @@ import org.springframework.web.bind.annotation.*;
 
 /**
  * 文章搜索相关
- *
+ * @author yiheni
  */
 @RestController
 @RequestMapping("/api/article")
 public class ArticleController {
-
-	private static final Logger logger = LoggerFactory.getLogger(ArticleController.class);
 
     @Autowired
     private ArticleService articleService;
 
     /**
      * 查询文章列表
+     *
      * @return
      */
     @PostMapping("/getArticleList")
     public ArticleResultByEsDO getArticleList(@RequestBody QueryArticleSearchVO queryArticleSearchVO) {
-        ArticleResultByEsDO articleList = articleService.getArticleList(queryArticleSearchVO);
-        return articleList;
+        return articleService.getArticleList(queryArticleSearchVO);
     }
-    
+
 }

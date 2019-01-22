@@ -12,6 +12,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @author yiheni
+ */
 public class ArticleSyncToEsManager {
 
     private final static Logger logger = LoggerFactory.getLogger(ArticleSyncToEsManager.class);
@@ -26,7 +29,8 @@ public class ArticleSyncToEsManager {
      * 同步数据到ES主控方法
      */
     public String syncDataControl() {
-        List<TbArticleDO> articleDOList = tbArticleDOMapper.selectAll();//查询所有文章列表
+        //查询所有文章列表
+        List<TbArticleDO> articleDOList = tbArticleDOMapper.selectAll();
 
         for (TbArticleDO tbArticleDO : articleDOList) {
             Map colMap = ConvertUserUtil.convertToMap(tbArticleDO);
@@ -37,7 +41,8 @@ public class ArticleSyncToEsManager {
                 logger.error("同步数据异常，ID: {} , e: {}", tbArticleDO.getId(), e);
             }
         }
-        return "success";//执行成功返回结果
+        //执行成功返回结果
+        return "success";
     }
 
 }

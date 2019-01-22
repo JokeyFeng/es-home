@@ -16,12 +16,9 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
-@ComponentScan
 @ImportResource("classpath:META-INF/spring/*.xml")
 @Order(1)
 public class DataDumpApplication {
-
-    private final static Logger logger = LoggerFactory.getLogger(DataDumpApplication.class);
 
     @Autowired
     private ElasticSearchInitClientManager elasticSearchClientManager;

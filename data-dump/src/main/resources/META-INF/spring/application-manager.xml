@@ -16,5 +16,4 @@
 
     <!-- 配置canalmanager -->
     <bean id="canalInitClientManager" class="com.es.datadump.manager.canal.CanalInitClientManager"/>
-
 </beans>

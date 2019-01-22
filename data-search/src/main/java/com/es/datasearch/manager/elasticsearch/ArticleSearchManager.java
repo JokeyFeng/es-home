@@ -50,9 +50,10 @@ public class ArticleSearchManager {
      */
     public String queryArticleList(QueryArticleSearchVO queryArticleSearchVO) {
         logger.info("ArticleSearchManager.queryArticleList.queryArticleSearchVO:{}", JSON.toJSONString(queryArticleSearchVO));
-
-        Map result = new HashMap();// 存放最终结果信息
-        List<Map> articleList = new ArrayList<>();//存放文章列表信息
+        // 存放最终结果信息
+        Map result = new HashMap();
+        //存放文章列表信息
+        List<Map> articleList = new ArrayList<>();
         // 限制最多查询50条
         if (queryArticleSearchVO.pageSize < 1 || queryArticleSearchVO.pageSize > 50) {
             result.put("recordSize", 0);
@@ -63,12 +64,14 @@ public class ArticleSearchManager {
         SearchRequest searchRequest = new SearchRequest(articleIndex);
         searchRequest.types(generalType);
 
-        SearchSourceBuilder searchSourceBuilder = builderArticleSquareCondition(queryArticleSearchVO);//组装查询条件
+        //组装查询条件
+        SearchSourceBuilder searchSourceBuilder = builderArticleSquareCondition(queryArticleSearchVO);
 
         searchRequest.source(searchSourceBuilder);
         //查询条件组装完成-------------------------------------------------------------------------------------------------
         try {
-            SearchResponse rsp = client.search(searchRequest);//开始查询
+            //开始查询
+            SearchResponse rsp = client.search(searchRequest);
             SearchHits hits = rsp.getHits();
             result.put("recordSize", hits.getTotalHits());
             for (SearchHit hit : hits) {
@@ -98,7 +101,8 @@ public class ArticleSearchManager {
         if (queryArticleSearchVO.pageNo > 0) {
             int from = (queryArticleSearchVO.pageNo - 1) * queryArticleSearchVO.pageSize;
             int size = queryArticleSearchVO.pageSize;
-            searchSourceBuilder.from(from);//设置分页
+            //设置分页
+            searchSourceBuilder.from(from);
             searchSourceBuilder.size(size);
         }
 
@@ -136,11 +140,12 @@ public class ArticleSearchManager {
         if (queryArticleSearchVO.sortType == 1) {
             //当排序规则传入为1时，按照距离正序排序
             searchSourceBuilder.sort(new GeoDistanceSortBuilder("location",
-                    new GeoPoint().parseFromLatLon(queryArticleSearchVO.latitude + "," + queryArticleSearchVO.longitude))
+                    GeoPoint.parseFromLatLon(queryArticleSearchVO.latitude + "," + queryArticleSearchVO.longitude))
                     .order(SortOrder.ASC));
         } else if (queryArticleSearchVO.sortType == 0) {
             //当排序规则传入为0时，按照时间倒序排序
-            searchSourceBuilder.sort(new FieldSortBuilder("create_time").order(SortOrder.DESC));//按文章创建时间倒序排列。
+            //按文章创建时间倒序排列。
+            searchSourceBuilder.sort(new FieldSortBuilder("create_time").order(SortOrder.DESC));
         }
         return searchSourceBuilder;
     }

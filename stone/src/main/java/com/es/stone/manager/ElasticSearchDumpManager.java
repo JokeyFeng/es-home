@@ -17,6 +17,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import java.io.IOException;
 import java.util.Map;
 
+/**
+ * @author yiheni
+ */
 public class ElasticSearchDumpManager {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(ElasticSearchDumpManager.class);
@@ -70,11 +73,14 @@ public class ElasticSearchDumpManager {
      *
      * @param colMap
      * @param index
+     * @param type
+     * @param tryCount
      */
     public void insertOrUpdateToEsWithType(Map colMap, String index, String type, int tryCount) {
         String esKey = (String) colMap.get(EsConstant.ES_KEY);
         UpdateRequest request = new UpdateRequest(index, type, esKey);
-        colMap.remove(EsConstant.ES_KEY);//移除主键值
+        //移除主键值
+        colMap.remove(EsConstant.ES_KEY);
         request.doc(colMap);
         request.upsert(colMap);
         RestHighLevelClient client = elasticSearchInitClientManager.getClientFromPool();

@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.net.InetSocketAddress;
 
+/**
+ * @author yiheni
+ */
 public class CanalInitClientManager {
 
     private final static Logger logger = LoggerFactory.getLogger(CanalInitClientManager.class);
