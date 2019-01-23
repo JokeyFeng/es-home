@@ -36,5 +36,4 @@ public class DataDumpApplication {
                 + ok);
         elasticSearchClientManager.getElasticClient();
     }
-
 }
