@@ -18,8 +18,8 @@ public class CanalInitClientManager {
     @Value("${canal.client.servers}")
     private String servers;
 
-    @Value("${canal.client.cluser}")
-    private boolean cluser;
+    @Value("${canal.client.cluster}")
+    private boolean cluster;
 
     @Value("${canal.client.destination}")
     private String destination;
@@ -29,12 +29,12 @@ public class CanalInitClientManager {
     public final CanalConnector getCanalConnector() {
         logger.info("--------------canalServer:" + servers);
         logger.info("--------------destination:" + destination);
-        if (cluser) {
+        if (cluster) {
             canalConnector = CanalConnectors.newClusterConnector(servers, destination, "", "");
         } else {
             if (canalConnector == null) {
                 if (servers != null) {
-                    InetSocketAddress inetSocketAddress = stringToAddress(servers);
+                    InetSocketAddress inetSocketAddress = this.stringToAddress(servers);
                     canalConnector = CanalConnectors.newSingleConnector(inetSocketAddress, destination, "", "");
                 }
 
@@ -49,7 +49,7 @@ public class CanalInitClientManager {
      * @param server
      * @return
      */
-    protected InetSocketAddress stringToAddress(String server) {
+    private InetSocketAddress stringToAddress(String server) {
         if (server != null) {
             String[] ipAndPort = server.split(":");
             return new InetSocketAddress(ipAndPort[0], Integer.valueOf(ipAndPort[1]));

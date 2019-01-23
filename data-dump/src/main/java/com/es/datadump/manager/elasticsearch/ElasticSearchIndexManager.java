@@ -14,6 +14,7 @@ import java.util.List;
 /**
  * @author yiheni
  */
+@SuppressWarnings("all")
 public class ElasticSearchIndexManager {
 
     private final static Logger logger = LoggerFactory.getLogger(ElasticSearchIndexManager.class);
@@ -60,7 +61,7 @@ public class ElasticSearchIndexManager {
                         //针对特殊索引配置初始化逻辑
                         if ("db_search.tb_article".equals(idx)) {
                             //设置索引初始化mapper
-                            createIndexRequest = convertTbArticle("db_search.tb_article");
+                            createIndexRequest = this.convertTbArticle("db_search.tb_article");
                         }
                         //设置完成mapper后进行判断
                         //mapper非空则创建索引
@@ -83,5 +84,4 @@ public class ElasticSearchIndexManager {
         }
         return flag;
     }
-
 }

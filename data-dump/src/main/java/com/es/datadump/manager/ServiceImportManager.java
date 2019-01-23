@@ -8,6 +8,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Map;
 
+/**
+ * @author yiheni
+ */
 public class ServiceImportManager {
 
     private final static Logger logger = LoggerFactory.getLogger(ServiceImportManager.class);

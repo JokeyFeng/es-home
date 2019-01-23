@@ -15,6 +15,9 @@ import org.springframework.core.annotation.Order;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+/**
+ * @author yiheni
+ */
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class, HibernateJpaAutoConfiguration.class})
 @ImportResource("classpath:META-INF/spring/*.xml")
 @Order(1)

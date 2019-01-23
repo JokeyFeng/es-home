@@ -10,6 +10,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -27,11 +28,12 @@ public class ElasticSearchInitClientManager {
 
     @Value("${es.client.servers}")
     private String servers;
+
     private RestHighLevelClient client = null;
 
     public final RestHighLevelClient getElasticClient() {
         if (client == null) {
-            HttpHost[] httpHosts = serverToHttpHost(servers);
+            HttpHost[] httpHosts = this.serverToHttpHost(servers);
             if (httpHosts != null) {
                 try {
                     client = new RestHighLevelClient(RestClient.builder(httpHosts));
@@ -46,7 +48,7 @@ public class ElasticSearchInitClientManager {
     protected HttpHost[] serverToHttpHost(String servers) {
         String[] arrServer = servers.split(",");
         List<HttpHost> hostList = new ArrayList<>();
-        HttpHost[] hostArr = null;
+        HttpHost[] hostArr;
         if (arrServer.length < 1) {
             logger.error("ES服务器配置不正确，请检查！");
             return null;
@@ -61,7 +63,7 @@ public class ElasticSearchInitClientManager {
                     return null;
                 }
             } else {
-                logger.error("ES服务器配置的ip与port不正确。错误值:" + ipAndPort.toString());
+                logger.error("ES服务器配置的ip与port不正确。错误值:" + Arrays.toString(ipAndPort));
                 return null;
             }
         }

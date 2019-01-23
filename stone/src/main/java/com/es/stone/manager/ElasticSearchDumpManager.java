@@ -65,7 +65,7 @@ public class ElasticSearchDumpManager {
      * @param index
      */
     public void insertOrUpdateToEs(Map colMap, String index) {
-        insertOrUpdateToEsWithType(colMap, index, GENERAL_TYPE, 0);
+        this.insertOrUpdateToEsWithType(colMap, index, GENERAL_TYPE, 0);
     }
 
     /**
@@ -91,7 +91,7 @@ public class ElasticSearchDumpManager {
             if (tryCount < 3) {
                 tryCount++;
                 colMap.put(EsConstant.ES_KEY, esKey);
-                insertOrUpdateToEsWithType(colMap, index, type, tryCount);
+                this.insertOrUpdateToEsWithType(colMap, index, type, tryCount);
             }
         } finally {
             elasticSearchInitClientManager.disConnect(client);

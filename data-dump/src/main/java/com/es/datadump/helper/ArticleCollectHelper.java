@@ -9,17 +9,19 @@ import java.util.List;
 /**
  * @author yiheni
  */
+@SuppressWarnings("all")
 public class ArticleCollectHelper {
-	/**
-	 * 组装根据Id查询文章信息的查询逻辑
-	 * @param ids
-	 * @return
-	 */
-	public static SearchRequest buildArticleSearchRequestById(List<Long> ids) {
-		SearchRequest searchRequest = new SearchRequest("db_search.tb_article");
-		searchRequest.types("doc");
-		SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
-		searchSourceBuilder.query(QueryBuilders.termsQuery("_id", ids));
-		return searchRequest.source(searchSourceBuilder);
-	}
+    /**
+     * 组装根据Id查询文章信息的查询逻辑
+     *
+     * @param ids
+     * @return
+     */
+    public static SearchRequest buildArticleSearchRequestById(List<Long> ids) {
+        SearchRequest searchRequest = new SearchRequest("db_search.tb_article");
+        searchRequest.types("doc");
+        SearchSourceBuilder searchSourceBuilder = new SearchSourceBuilder();
+        searchSourceBuilder.query(QueryBuilders.termsQuery("_id", ids));
+        return searchRequest.source(searchSourceBuilder);
+    }
 }

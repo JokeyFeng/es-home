@@ -32,17 +32,17 @@ import java.util.concurrent.TimeUnit;
  */
 public class AbstractCanalCoreManager {
 
-    protected final static Logger logger = LoggerFactory.getLogger(AbstractCanalCoreManager.class);
-    protected static final String SEP = SystemUtils.LINE_SEPARATOR;
-    protected static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
-    protected volatile boolean running = false;
-    protected Thread.UncaughtExceptionHandler handler = (t, e) -> logger.error("parse events has an error", e);
-    protected Thread thread = null;
-    protected CanalConnector canalConnector;
-    protected static String context_format;
-    protected static String row_format;
-    protected static String transaction_format;
-    protected String destination;
+    private final static Logger logger = LoggerFactory.getLogger(AbstractCanalCoreManager.class);
+    private static final String SEP = SystemUtils.LINE_SEPARATOR;
+    private static final String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss";
+    private volatile boolean running = false;
+    private Thread.UncaughtExceptionHandler handler = (t, e) -> logger.error("parse events has an error", e);
+    private Thread thread = null;
+    private CanalConnector canalConnector;
+    private static String context_format;
+    private static String row_format;
+    private static String transaction_format;
+    private String destination;
 
     private ElasticSearchDumpManager elasticSearchDumpManager;
     private ServiceImportManager serviceImportManager;
@@ -52,7 +52,7 @@ public class AbstractCanalCoreManager {
 
     static {
         context_format = SEP + "****************************************************" + SEP;
-        context_format += "* Batch Id: [{}] ,count : [{}] , memsize : [{}] , Time : {}" + SEP;
+        context_format += "* Batch Id: [{}] ,count : [{}] , memSize : [{}] , Time : {}" + SEP;
         context_format += "* Start : [{}] " + SEP;
         context_format += "* End : [{}] " + SEP;
         context_format += "****************************************************" + SEP;
@@ -123,7 +123,8 @@ public class AbstractCanalCoreManager {
 
                     // 提交确认
                     canalConnector.ack(batchId);
-                    // connector.rollback(batchId); // 处理失败, 回滚数据
+                    // 处理失败, 回滚数据
+                    // connector.rollback(batchId)
                 }
             } catch (Exception e) {
                 logger.error("process error!", e);
@@ -318,14 +319,14 @@ public class AbstractCanalCoreManager {
 
                 //解析mysql逐行数据
                 if (entry.getEntryType() == EntryType.ROWDATA) {
-                    RowChange rowChage = null;
+                    RowChange rowChange;
                     try {
-                        rowChage = RowChange.parseFrom(entry.getStoreValue());
+                        rowChange = RowChange.parseFrom(entry.getStoreValue());
                     } catch (Exception e) {
                         throw new RuntimeException("parse event has an error , data:" + entry.toString(), e);
                     }
 
-                    EventType eventType = rowChage.getEventType();
+                    EventType eventType = rowChange.getEventType();
 
                     logger.info(row_format,
                             entry.getHeader().getLogfileName(),
@@ -333,16 +334,16 @@ public class AbstractCanalCoreManager {
                             entry.getHeader().getTableName(), eventType,
                             String.valueOf(entry.getHeader().getExecuteTime()), String.valueOf(delayTime));
 
-                    if (eventType == EventType.QUERY || rowChage.getIsDdl()) {
-                        logger.info(" sql ----> " + rowChage.getSql() + SEP);
+                    if (eventType == EventType.QUERY || rowChange.getIsDdl()) {
+                        logger.info(" sql ----> " + rowChange.getSql() + SEP);
                     }
 
                     //开启线程逐行同步数据
-                    if (rowChage.getRowDatasList().size() > 0) {
+                    if (rowChange.getRowDatasList().size() > 0) {
                         ExecutorService syncRowDataThreadPool = Executors.newFixedThreadPool(5);
                         List<RowData> rowDataList = new ArrayList<>();
                         int i = 0;
-                        for (RowData rowData : rowChage.getRowDatasList()) {
+                        for (RowData rowData : rowChange.getRowDatasList()) {
                             if (rowDataList.size() < 4) {
                                 rowDataList.add(rowData);
                             } else {

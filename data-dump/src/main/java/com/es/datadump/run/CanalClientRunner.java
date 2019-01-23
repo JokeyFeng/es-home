@@ -43,20 +43,15 @@ public class CanalClientRunner implements CommandLineRunner {
         canalManager.setElasticSearchDumpManager(elasticSearchDumpManager);
         canalManager.setServiceImportManager(serviceImportManager);
         canalManager.start();
-        Runtime.getRuntime().addShutdownHook(new Thread() {
-
-            public void run() {
-                try {
-                    logger.info("## stop the canal client");
-                    canalManager.stop();
-                } catch (Throwable e) {
-                    logger.warn("##something goes wrong when stopping canal:", e);
-                } finally {
-                    logger.info("## canal client is down.");
-                }
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                logger.info("## stop the canal client");
+                canalManager.stop();
+            } catch (Throwable e) {
+                logger.warn("##something wrong happens when stopping canal:", e);
+            } finally {
+                logger.info("## canal client is down.");
             }
-
-        });
+        }));
     }
-
 }

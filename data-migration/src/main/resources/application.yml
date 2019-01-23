@@ -3,10 +3,10 @@ server:
 
 es:
   client:
-    servers: localhost:9200
+    servers: 192.168.1.113:9200
 
 local:
   jdbc:
-    url: jdbc:mysql://localhost:3306/db_search?autoReconnect=true&amp;useUnicode=true&amp;characterset=utf8mb4
+    url: jdbc:mysql://192.168.1.208:3306/db_search?autoReconnect=true&amp;useUnicode=true&amp;characterset=utf8mb4
     username: root
-    password:
+    password: 123456

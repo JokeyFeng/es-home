@@ -3,10 +3,10 @@ server:
 
 es:
   client:
-    servers: localhost:9200
+    servers: 192.168.1.113:9200
 
 canal:
   client:
-    servers: 127.0.0.1:11111
-    cluser: false
+    servers: 192.168.1.208:11111
+    cluster: false #是否集群使用
     destination: articlesubscibe

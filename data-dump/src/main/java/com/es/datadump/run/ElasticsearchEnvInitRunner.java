@@ -29,7 +29,8 @@ public class ElasticsearchEnvInitRunner implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         logger.info("-------------------------------------检查ES索引状态---------------------------------------------");
-        boolean flag = elasticSearchIndexManager.checkIndex("db_search.tb_article");//特殊索引配置入口,可直接追加
+        //特殊索引配置入口,可直接追加
+        boolean flag = elasticSearchIndexManager.checkIndex("db_search.tb_article");
         if (!flag) {
             System.exit(0);
         }
