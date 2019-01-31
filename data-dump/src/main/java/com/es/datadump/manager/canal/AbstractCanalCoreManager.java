@@ -9,6 +9,7 @@ import com.es.stone.constant.EsConstant;
 import com.es.stone.manager.ElasticSearchDumpManager;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
+import org.apache.commons.io.Charsets;
 import org.apache.commons.lang.SystemUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
@@ -18,6 +19,7 @@ import org.springframework.util.Assert;
 import org.springframework.util.CollectionUtils;
 
 import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -46,9 +48,9 @@ public class AbstractCanalCoreManager {
 
     private ElasticSearchDumpManager elasticSearchDumpManager;
     private ServiceImportManager serviceImportManager;
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-    private SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd");
-    private SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm:ss");
+    private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+    private final SimpleDateFormat sdfDate = new SimpleDateFormat("yyyy-MM-dd");
+    private final SimpleDateFormat sdfTime = new SimpleDateFormat("HH:mm:ss");
 
     static {
         context_format = SEP + "****************************************************" + SEP;
@@ -99,7 +101,7 @@ public class AbstractCanalCoreManager {
         MDC.remove("destination");
     }
 
-    protected void process() {
+    private void process() {
         int batchSize = 128;
         while (running) {
             try {
@@ -111,12 +113,7 @@ public class AbstractCanalCoreManager {
                     Message message = canalConnector.getWithoutAck(batchSize);
                     long batchId = message.getId();
                     int size = message.getEntries().size();
-                    if (batchId == -1 || size == 0) {
-                        // try {
-                        // Thread.sleep(1000);
-                        // } catch (InterruptedException e) {
-                        // }
-                    } else {
+                    if (batchId != -1 && size != 0) {
                         printSummary(message, batchId, size);
                         syncEntry(message.getEntries());
                     }
@@ -153,7 +150,7 @@ public class AbstractCanalCoreManager {
                 endPosition);
     }
 
-    protected String buildPositionForDump(Entry entry) {
+    private String buildPositionForDump(Entry entry) {
         long time = entry.getHeader().getExecuteTime();
         Date date = new Date(time);
         SimpleDateFormat format = new SimpleDateFormat(DATE_FORMAT);
@@ -167,7 +164,7 @@ public class AbstractCanalCoreManager {
      * @param entries
      * @throws Exception
      */
-    protected void syncEntry(List<Entry> entries) throws Exception {
+    private void syncEntry(List<Entry> entries) throws Exception {
         //开固定数量的线程跑
         //1、创建固定线程池。
         ExecutorService syncEntryThreadPool = Executors.newFixedThreadPool(5);
@@ -196,7 +193,7 @@ public class AbstractCanalCoreManager {
      * @param columns
      * @return
      */
-    protected Map analysisColumn(List<Column> columns) {
+    private Map analysisColumn(List<Column> columns) {
         Map colMap = Collections.synchronizedMap(new HashMap());
         boolean errorLog = false;
 
@@ -209,7 +206,7 @@ public class AbstractCanalCoreManager {
                 keyMap.put(column.getName(), column.getValue());
                 colMap.put(column.getName(), column.getValue());
             }
-            if ("timestamp".equals(column.getMysqlType()) || "datetime".equals(column.getMysqlType())) {
+            if (EsConstant.TIMESTAMP.equals(column.getMysqlType()) || EsConstant.DATETIME.equals(column.getMysqlType())) {
                 if (StringUtils.isNotBlank(column.getValue())) {
                     try {
                         synchronized (sdf) {
@@ -221,7 +218,7 @@ public class AbstractCanalCoreManager {
                         errorLog = true;
                     }
                 }
-            } else if ("date".equals(column.getMysqlType())) {
+            } else if (EsConstant.DATE.equals(column.getMysqlType())) {
                 //一定要在此处加判断，如果为空，则不走下面的else分支，不组装date字段，否则es报错。
                 if (StringUtils.isNotBlank(column.getValue())) {
                     try {
@@ -234,7 +231,7 @@ public class AbstractCanalCoreManager {
                         errorLog = true;
                     }
                 }
-            } else if ("time".equals(column.getMysqlType())) {
+            } else if (EsConstant.TIME.equals(column.getMysqlType())) {
                 //一定要在此处加判断，如果为空，则不走下面的else分支，不组装time字段，否则es报错。
                 if (StringUtils.isNotBlank(column.getValue())) {
                     try {
@@ -247,10 +244,10 @@ public class AbstractCanalCoreManager {
                         errorLog = true;
                     }
                 }
-            } else if ("blob".equals(column.getMysqlType())) {
+            } else if (EsConstant.BLOB.equals(column.getMysqlType())) {
                 ByteString bs = column.getValueBytes();
                 try {
-                    String blobVal = CharSetUtil.bytesToString(bs.toByteArray(), "ISO-8859-1", "UTF-8");
+                    String blobVal = CharSetUtil.bytesToString(bs.toByteArray(), Charsets.ISO_8859_1.name(), Charsets.UTF_8.name());
                     colMap.put(column.getName(), blobVal);
                 } catch (CharacterCodingException e) {
                     logger.error("数据库blob字段解析异常： {},value: {} ", column.getName(), column.getValue(), e);
@@ -267,6 +264,7 @@ public class AbstractCanalCoreManager {
 
         return colMap;
     }
+
 
     private class SyncDataThread implements Callable<Integer> {
         private int threadId;
@@ -380,7 +378,7 @@ public class AbstractCanalCoreManager {
         private Entry entry;
         private EventType eventType;
 
-        public SyncRowDataThread(int id, List<RowData> rowDataList, Entry entry, EventType eventType) {
+        SyncRowDataThread(int id, List<RowData> rowDataList, Entry entry, EventType eventType) {
             this.threadId = id;
             this.rowDataList = rowDataList;
             this.entry = entry;
@@ -388,7 +386,7 @@ public class AbstractCanalCoreManager {
         }
 
         @Override
-        public Integer call() throws Exception {
+        public Integer call() {
             Map colMap;
             for (RowData rowData : rowDataList) {
                 if (eventType == EventType.DELETE) {
@@ -415,5 +413,4 @@ public class AbstractCanalCoreManager {
     public void setServiceImportManager(ServiceImportManager serviceImportManager) {
         this.serviceImportManager = serviceImportManager;
     }
-
 }

@@ -59,7 +59,7 @@ public class ElasticSearchInitClientManager {
                 try {
                     hostList.add(new HttpHost(ipAndPort[0], Integer.valueOf(ipAndPort[1]), "http"));
                 } catch (Exception e) {
-                    logger.error("ES服务器地址配置不正确!", e);
+                    logger.error("ES服务器地址配置不正确！", e);
                     return null;
                 }
             } else {

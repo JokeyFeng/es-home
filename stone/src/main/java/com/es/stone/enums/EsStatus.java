@@ -17,7 +17,7 @@ public enum EsStatus {
     private String desc;
     private int type;
 
-    private EsStatus(String desc, int type) {
+    EsStatus(String desc, int type) {
         this.desc = desc;
         this.type = type;
     }
@@ -38,5 +38,4 @@ public enum EsStatus {
         }
         return null;
     }
-
 }
